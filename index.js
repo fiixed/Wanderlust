@@ -25,6 +25,17 @@ app.get('/contact', (req, res) => {
   res.render('contact', {startingContent: contactContent});
 });
 
+app.get('/compose', (req, res) => {
+  res.render('compose');
+});
+
+app.post('/compose', (req, res) => {
+  const post = {
+    title: req.body.postTitle,
+    content: req.body.postBody
+  };
+});
+
 
 app.listen(3000, () => {
   console.log('Server started on port 3000');
