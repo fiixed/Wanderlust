@@ -2,6 +2,11 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: #f1f1f1;
+}
+
+a {
+  color:#23120B;
 }
 
 .container-fluid {
@@ -17,10 +22,11 @@ body {
   margin-bottom: 0;
   font-size: 14px;
   letter-spacing: 5px;
+  background-color: #FDB827;
 }
 
 .navbar-nav li a:hover {
-  color: #1abc9c !important;
+  color: #21209c !important;
 }
 
 .my-btn {
@@ -43,7 +49,7 @@ body {
   text-align: center;
   margin-top: auto;
   padding: 1.5em 0;
-  background-color: #1abc9c;
+  background-color: #21209c;
 }
 
 .footer p {
