@@ -23,12 +23,20 @@ const postSchema = {
 
 const Post = mongoose.model('Post', postSchema);
 
-app.get('/', (req, res) => {
+app.route('/').get((req, res) => {
   Post.find({}, (err, posts) => {
     res.render('home', {
       startingContent: homeStartingContent,
       posts: posts
     });
+  });
+}).delete((req, res) => {
+  Post.deleteMany({}, (err) => {
+    if (!err) {
+      res.send("Successfully deleted all posts");
+    } else {
+      res.send(err);
+    }
   });
 });
 
@@ -40,11 +48,9 @@ app.get('/contact', (req, res) => {
   res.render('contact', { startingContent: contactContent });
 });
 
-app.get('/compose', (req, res) => {
+app.route('/compose').get((req, res) => {
   res.render('compose');
-});
-
-app.post('/compose', (req, res) => {
+}).post((req, res) => {
   const post = new Post({
     title: req.body.postTitle,
     content: req.body.postBody
@@ -57,15 +63,46 @@ app.post('/compose', (req, res) => {
   });
 });
 
-app.get('/posts/:postId', (req, res) => {
-  const requestedPostId = req.params.postId;
-
-  Post.findOne({ _id: requestedPostId }, (err, post) => {
+app.route('/posts/:postId').get((req, res) => {
+  Post.findOne({ _id: req.params.postId }, (err, post) => {
     res.render('post', {
       title: post.title,
       content: post.content
     });
   });
+}).put((req, res) => {
+  Post.update(
+    { _id: req.params.postId },
+    {
+      title: req.body.title,
+      content: req.body.content
+    },
+    { overwrite: true },
+    (err) => {
+      if (!err) {
+        res.send("replaced post");
+      }
+    });
+}).patch((req, res) => {
+  Post.update(
+    { _id: req.params.postId },
+    { $set: req.body },
+    (err) => {
+      if (!err) {
+        res.send("updated post");
+      } else {
+        res.send(err);
+      }
+    });
+}).delete((req, res) => {
+  Post.deleteOne(
+    { _id: req.params.postId },
+    (err) => {
+      if (!err) {
+        res.send("deleted post");
+      }
+    }
+  );
 });
 
 
