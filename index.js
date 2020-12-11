@@ -50,7 +50,7 @@ app.post('/compose', (req, res) => {
     content: req.body.postBody
   });
 
-  post.save(function (err) {
+  post.save((err) => {
     if (!err) {
       res.redirect('/');
     }
