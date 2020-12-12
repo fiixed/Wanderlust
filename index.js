@@ -96,7 +96,7 @@ app.route('/posts/:postId').get((req, res) => {
     { overwrite: true },
     (err) => {
       if (!err) {
-        res.send("replaced post");
+        res.send('replaced post');
       }
     });
 }).patch((req, res) => {
@@ -105,7 +105,7 @@ app.route('/posts/:postId').get((req, res) => {
     { $set: req.body },
     (err) => {
       if (!err) {
-        res.send("updated post");
+        res.send('updated post');
       } else {
         res.send(err);
       }
@@ -115,21 +115,15 @@ app.route('/posts/:postId').get((req, res) => {
     { _id: req.params.postId },
     (err) => {
       if (!err) {
-        res.send("deleted post");
+        res.send('deleted post');
       }
     }
   );
 });
 
-app.get('/login', (req, res) => {
-  res.render("login");
-});
-
-app.get('/register', (req, res) => {
-  res.render("register");
-});
-
-app.post('/register', (req, res) => {
+app.route('/register').get((req, res) => {
+  res.render('register');
+}).post((req, res) => {
   const newUser = new User({
     email: req.body.username,
     password: md5(req.body.password)
@@ -139,12 +133,14 @@ app.post('/register', (req, res) => {
     if (err) {
       console.log(err);
     } else {
-      res.redirect("secrets");
+      res.redirect('secrets');
     }
   });
 });
 
-app.post('/login', (req, res) => {
+app.route('/login').get((req, res) => {
+  res.render('login');
+}).post((req, res) => {
   const username = req.body.username;
   const password = md5(req.body.password);
 
@@ -154,7 +150,7 @@ app.post('/login', (req, res) => {
     } else {
       if (foundUser) {
         if (foundUser.password === password) {
-          res.redirect("secrets");
+          res.redirect('secrets');
         }
       }
     }
