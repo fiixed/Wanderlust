@@ -28,18 +28,21 @@ const postSchema = new mongoose.Schema({
   content: String
 });
 
+
+
 userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
 const User = new mongoose.model('User', userSchema);
 
 const Post = new mongoose.model('Post', postSchema);
 
+
 app.get('/', (req, res) => {
   res.render('home');
 });
 
 app.get('/secrets', (req, res) => {
-  Post.find({}, (err, posts) => {
+  Post.find((err, posts) => {
     res.render('secrets', {
       posts: posts
     });
@@ -145,7 +148,7 @@ app.post('/register', (req, res) => {
     if (err) {
       console.log(err);
     } else {
-      res.render("secrets");
+      res.redirect("secrets");
     }
   });
 });
@@ -160,7 +163,7 @@ app.post('/login', (req, res) => {
     } else {
       if (foundUser) {
         if (foundUser.password === password) {
-          res.render("secrets");
+          res.redirect("secrets");
         }
       }
     }
@@ -168,6 +171,8 @@ app.post('/login', (req, res) => {
 });
 
 
-app.listen(3000, () => {
-  console.log('Server started on port 3000');
+// Set Port
+app.set('port', (process.env.PORT || 3011));
+app.listen(app.get('port'), function () {
+  console.log('Server started on port ' + app.get('port'));
 });
