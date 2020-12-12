@@ -41,29 +41,21 @@ app.get('/', (req, res) => {
   res.render('home');
 });
 
-app.get('/secrets', (req, res) => {
-  Post.find((err, posts) => {
+app.route('/secrets').get((req, res) => {
+  Post.find({}, (err, posts) => {
     res.render('secrets', {
       posts: posts
     });
   });
+}).delete((req, res) => {
+  Post.deleteMany({}, (err) => {
+    if (!err) {
+      res.send("Successfully deleted all posts");
+    } else {
+      res.send(err);
+    }
+  });
 });
-
-// app.route('/secrets').get((req, res) => {
-//   Post.find({}, (err, posts) => {
-//     res.render('secrets', {
-//       posts: posts
-//     });
-//   });
-// }).delete((req, res) => {
-//   Post.deleteMany({}, (err) => {
-//     if (!err) {
-//       res.send("Successfully deleted all posts");
-//     } else {
-//       res.send(err);
-//     }
-//   });
-// });
 
 app.get('/about', (req, res) => {
   res.render('about', { startingContent: aboutContent });
