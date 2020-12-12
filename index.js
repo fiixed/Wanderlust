@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
+const encrypt = require('mongoose-encryption');
 const _ = require('lodash');
 
 const homeStartingContent = 'Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.';
@@ -14,31 +16,51 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-mongoose.connect('mongodb://localhost:27017/blogDB', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://localhost:27017/wanderlustDB', { useNewUrlParser: true, useUnifiedTopology: true });
 
-const postSchema = {
+const userSchema = new mongoose.Schema({
+  email: String,
+  password: String
+});
+
+const postSchema = new mongoose.Schema({
   title: String,
   content: String
-};
+});
 
-const Post = mongoose.model('Post', postSchema);
+userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
-app.route('/').get((req, res) => {
+const User = new mongoose.model('User', userSchema);
+
+const Post = new mongoose.model('Post', postSchema);
+
+app.get('/', (req, res) => {
+  res.render('home');
+});
+
+app.get('/secrets', (req, res) => {
   Post.find({}, (err, posts) => {
-    res.render('home', {
-      startingContent: homeStartingContent,
+    res.render('secrets', {
       posts: posts
     });
   });
-}).delete((req, res) => {
-  Post.deleteMany({}, (err) => {
-    if (!err) {
-      res.send("Successfully deleted all posts");
-    } else {
-      res.send(err);
-    }
-  });
 });
+
+// app.route('/secrets').get((req, res) => {
+//   Post.find({}, (err, posts) => {
+//     res.render('secrets', {
+//       posts: posts
+//     });
+//   });
+// }).delete((req, res) => {
+//   Post.deleteMany({}, (err) => {
+//     if (!err) {
+//       res.send("Successfully deleted all posts");
+//     } else {
+//       res.send(err);
+//     }
+//   });
+// });
 
 app.get('/about', (req, res) => {
   res.render('about', { startingContent: aboutContent });
@@ -58,7 +80,7 @@ app.route('/compose').get((req, res) => {
 
   post.save((err) => {
     if (!err) {
-      res.redirect('/');
+      res.redirect('/secrets');
     }
   });
 });
@@ -103,6 +125,46 @@ app.route('/posts/:postId').get((req, res) => {
       }
     }
   );
+});
+
+app.get('/login', (req, res) => {
+  res.render("login");
+});
+
+app.get('/register', (req, res) => {
+  res.render("register");
+});
+
+app.post('/register', (req, res) => {
+  const newUser = new User({
+    email: req.body.username,
+    password: req.body.password
+  });
+
+  newUser.save((err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.render("secrets");
+    }
+  });
+});
+
+app.post('/login', (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+
+  User.findOne({ email: username }, (err, foundUser) => {
+    if (err) {
+      console.log(err);
+    } else {
+      if (foundUser) {
+        if (foundUser.password === password) {
+          res.render("secrets");
+        }
+      }
+    }
+  });
 });
 
 
