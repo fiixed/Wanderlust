@@ -2,12 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
+const session = require('express-session');
+const passport = require('passport');
+const passportLocalMongoose = require('passport-local-mongoose');
+const flash = require('connect-flash');
+const User = require('./models/user');
+const Post = require('./models/post');
 
-
-
-const homeStartingContent = 'Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.';
 const aboutContent = 'Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.';
 const contactContent = 'Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.';
 
@@ -17,41 +18,26 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.use(flash());
+app.use(session({
+  secret: 'Our little secret.',
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 mongoose.connect('mongodb://localhost:27017/wanderlustDB', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.set('useCreateIndex', true);
 
-const userSchema = new mongoose.Schema({
-  email: String,
-  password: String
-});
+passport.use(User.createStrategy());
 
-const postSchema = new mongoose.Schema({
-  title: String,
-  content: String
-});
-
-const User = new mongoose.model('User', userSchema);
-
-const Post = new mongoose.model('Post', postSchema);
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 app.get('/', (req, res) => {
   res.render('home');
-});
-
-app.route('/secrets').get((req, res) => {
-  Post.find({}, (err, posts) => {
-    res.render('secrets', {
-      posts: posts
-    });
-  });
-}).delete((req, res) => {
-  Post.deleteMany({}, (err) => {
-    if (!err) {
-      res.send("Successfully deleted all posts");
-    } else {
-      res.send(err);
-    }
-  });
 });
 
 app.get('/about', (req, res) => {
@@ -122,41 +108,76 @@ app.route('/posts/:postId').get((req, res) => {
 app.route('/register').get((req, res) => {
   res.render('register');
 }).post((req, res) => {
-  bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
-    const newUser = new User({
-      email: req.body.username,
-      password: hash
-    });
 
-    newUser.save((err) => {
-      if (err) {
-        console.log(err);
-      } else {
+  User.register({ username: req.body.username }, req.body.password, (err, user) => {
+    if (err) {
+      console.log(err);
+      res.redirect('register');
+    } else {
+      passport.authenticate('local')(req, res, () => {
         res.redirect('secrets');
-      }
-    });
+      });
+    }
   });
 });
 
-app.route('/login').get((req, res) => {
-  res.render('login');
-}).post((req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+app.route('/secrets').get((req, res) => {
+  if (req.isAuthenticated()) {
+    Post.find({}, (err, posts) => {
+      res.render('secrets', {
+        posts: posts
+      });
+    });
+  } else {
+    res.redirect('/login');
+  }
 
-  User.findOne({ email: username }, (err, foundUser) => {
-    if (err) {
-      console.log(err);
+}).delete((req, res) => {
+  Post.deleteMany({}, (err) => {
+    if (!err) {
+      res.send("Successfully deleted all posts");
     } else {
-      if (foundUser) {
-        bcrypt.compare(password, foundUser.password, (err, result) => {
-          if (result === true) {
-            res.redirect('secrets');
-          }
-        });
-      }
+      res.send(err);
     }
   });
+});
+
+// app.route('/login').get((req, res) => {
+//   res.render('login');
+// }).post((req, res) => {
+//   const user = new User({
+//     username: req.body.username,
+//     password: req.body.password
+//   });
+
+//   req.login(user, (err) => {
+//     if (err) {
+//       res.redirect('/login');
+//     } else {
+//       passport.authenticate('local')(req, res, () => {
+//         res.redirect('/secrets');
+//       });
+//     }
+//   });
+// });
+
+
+
+app.get("/login", function (req, res) {
+  res.render("login");
+});
+
+// Login Logic
+// middleware
+app.post("/login", passport.authenticate("local", {
+  successRedirect: "/secrets",
+  failureRedirect: "/login",
+  failureFlash: 'Invalid username or password.'
+}));
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  res.redirect('/');
 });
 
 // Set Port
