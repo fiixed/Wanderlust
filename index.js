@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
+const flash = require('connect-flash');
 
 
 const aboutContent = 'Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.';
@@ -16,6 +17,7 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.use(flash());
 app.use(session({
   secret: 'Our little secret.',
   resave: false,
@@ -155,24 +157,38 @@ app.route('/secrets').get((req, res) => {
   });
 });
 
-app.route('/login').get((req, res) => {
-  res.render('login');
-}).post((req, res) => {
-  const user = new User({
-    username: req.body.username,
-    password: req.body.password
-  });
+// app.route('/login').get((req, res) => {
+//   res.render('login');
+// }).post((req, res) => {
+//   const user = new User({
+//     username: req.body.username,
+//     password: req.body.password
+//   });
 
-  req.login(user, (err) => {
-    if (err) {
-      res.redirect('/login');
-    } else {
-      passport.authenticate('local')(req, res, () => {
-        res.redirect('/secrets');
-      });
-    }
-  });
+//   req.login(user, (err) => {
+//     if (err) {
+//       res.redirect('/login');
+//     } else {
+//       passport.authenticate('local')(req, res, () => {
+//         res.redirect('/secrets');
+//       });
+//     }
+//   });
+// });
+
+
+
+app.get("/login", function (req, res) {
+  res.render("login");
 });
+
+// Login Logic
+// middleware
+app.post("/login", passport.authenticate("local", {
+  successRedirect: "/secrets",
+  failureRedirect: "/login",
+  failureFlash: 'Invalid username or password.'
+}));
 
 app.get('/logout', (req, res) => {
   req.logout();
