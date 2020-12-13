@@ -2,8 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
-const md5 = require('md5');
-const _ = require('lodash');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+
 
 const homeStartingContent = 'Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.';
 const aboutContent = 'Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.';
@@ -28,13 +30,9 @@ const postSchema = new mongoose.Schema({
   content: String
 });
 
-
-
-
 const User = new mongoose.model('User', userSchema);
 
 const Post = new mongoose.model('Post', postSchema);
-
 
 app.get('/', (req, res) => {
   res.render('home');
@@ -124,17 +122,19 @@ app.route('/posts/:postId').get((req, res) => {
 app.route('/register').get((req, res) => {
   res.render('register');
 }).post((req, res) => {
-  const newUser = new User({
-    email: req.body.username,
-    password: md5(req.body.password)
-  });
+  bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
+    const newUser = new User({
+      email: req.body.username,
+      password: hash
+    });
 
-  newUser.save((err) => {
-    if (err) {
-      console.log(err);
-    } else {
-      res.redirect('secrets');
-    }
+    newUser.save((err) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.redirect('secrets');
+      }
+    });
   });
 });
 
@@ -142,21 +142,22 @@ app.route('/login').get((req, res) => {
   res.render('login');
 }).post((req, res) => {
   const username = req.body.username;
-  const password = md5(req.body.password);
+  const password = req.body.password;
 
   User.findOne({ email: username }, (err, foundUser) => {
     if (err) {
       console.log(err);
     } else {
       if (foundUser) {
-        if (foundUser.password === password) {
-          res.redirect('secrets');
-        }
+        bcrypt.compare(password, foundUser.password, (err, result) => {
+          if (result === true) {
+            res.redirect('secrets');
+          }
+        });
       }
     }
   });
 });
-
 
 // Set Port
 app.set('port', (process.env.PORT || 3000));
