@@ -80,8 +80,14 @@ app.get('/contact', (req, res) => {
 });
 
 app.route('/compose').get((req, res) => {
-  res.render('compose');
+  if (req.isAuthenticated()) {
+    res.render('compose');
+  } else {
+    res.redirect('/login');
+  }
+
 }).post((req, res) => {
+
   const post = new Post({
     title: req.body.postTitle,
     content: req.body.postBody
