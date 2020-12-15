@@ -87,10 +87,10 @@ app.route('/compose').get((req, res) => {
   }
 
 }).post((req, res) => {
-
   const post = new Post({
     title: req.body.postTitle,
-    content: req.body.postBody
+    content: req.body.postBody,
+    userId: req.user.id
   });
 
   post.save((err) => {
@@ -160,7 +160,7 @@ app.route('/register').get((req, res) => {
 
 app.route('/secrets').get((req, res) => {
   if (req.isAuthenticated()) {
-    Post.find({}, (err, posts) => {
+    Post.find({ userId: req.user.id }, (err, posts) => {
       res.render('secrets', {
         posts: posts
       });
