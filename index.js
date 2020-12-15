@@ -50,19 +50,20 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.CLIENT_SECRET,
   callbackURL: 'http://localhost:3000/auth/google/wanderlust'
 },
-  function (accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+  function (accessToken, refreshToken, profile, email, cb) {
+    console.log(email._json.email);
+    User.findOrCreate({ username: email._json.email, googleId: profile.id }, function (err, user) {
       return cb(err, user);
     });
   }
 ));
 
 app.get('/', (req, res) => {
-  res.render('home');
+  res.render('home', { user: userName(req) });
 });
 
 app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile'] }));
+  passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 app.get('/auth/google/wanderlust',
   passport.authenticate('google', { failureRedirect: '/login' }),
@@ -143,7 +144,7 @@ app.route('/posts/:postId').get((req, res) => {
 });
 
 app.route('/register').get((req, res) => {
-  res.render('register');
+  res.render('register', { user: userName(req) });
 }).post((req, res) => {
 
   User.register({ username: req.body.username }, req.body.password, (err, user) => {
@@ -162,7 +163,8 @@ app.route('/secrets').get((req, res) => {
   if (req.isAuthenticated()) {
     Post.find({ userId: req.user.id }, (err, posts) => {
       res.render('secrets', {
-        posts: posts
+        posts: posts,
+        user: req.user.username
       });
     });
   } else {
@@ -201,7 +203,7 @@ app.route('/secrets').get((req, res) => {
 
 
 app.get("/login", function (req, res) {
-  res.render("login");
+  res.render("login", { user: userName(req) });
 });
 
 // Login Logic
@@ -222,3 +224,11 @@ app.set('port', (process.env.PORT || 3000));
 app.listen(app.get('port'), function () {
   console.log('Server started on port ' + app.get('port'));
 });
+
+const userName = (req) => {
+  if (req.isAuthenticated()) {
+    return req.user.username;
+  } else {
+    return '';
+  }
+};
