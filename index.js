@@ -52,7 +52,7 @@ passport.use(new GoogleStrategy({
 },
   function (accessToken, refreshToken, profile, email, cb) {
     console.log(email._json.email);
-    User.findOrCreate({ username: email._json.email, googleId: profile.id }, function (err, user) {
+    User.findOrCreate({ username: email._json.email }, function (err, user) {
       return cb(err, user);
     });
   }
@@ -82,7 +82,7 @@ app.get('/contact', (req, res) => {
 
 app.route('/compose').get((req, res) => {
   if (req.isAuthenticated()) {
-    res.render('compose');
+    res.render('compose', { user: userName(req) });
   } else {
     res.redirect('/login');
   }
@@ -106,7 +106,8 @@ app.route('/posts/:postId').get((req, res) => {
     res.render('post', {
       title: post.title,
       content: post.content,
-      user: req.user.username
+      user: userName(req)
+
     });
   });
 }).put((req, res) => {
