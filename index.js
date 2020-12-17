@@ -105,7 +105,8 @@ app.route('/posts/:postId').get((req, res) => {
   Post.findOne({ _id: req.params.postId }, (err, post) => {
     res.render('post', {
       title: post.title,
-      content: post.content
+      content: post.content,
+      user: req.user.username
     });
   });
 }).put((req, res) => {
