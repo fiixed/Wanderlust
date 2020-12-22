@@ -45,6 +45,10 @@ passport.deserializeUser(function (id, done) {
   });
 });
 
+const authRoutes = require('./routes/auth');
+const postRoutes = require('./routes/posts');
+
+
 passport.use(new GoogleStrategy({
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -62,164 +66,20 @@ app.get('/', (req, res) => {
   res.render('home', { user: userName(req) });
 });
 
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-app.get('/auth/google/wanderlust',
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  function (req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/secrets');
-  });
-
 app.get('/about', (req, res) => {
-  res.render('about', { startingContent: aboutContent });
+  res.render('about', { startingContent: aboutContent, user: userName(req) });
 });
 
 app.get('/contact', (req, res) => {
-  res.render('contact', { startingContent: contactContent });
+  res.render('contact', { startingContent: contactContent, user: userName(req) });
 });
-
-app.route('/compose').get((req, res) => {
-  if (req.isAuthenticated()) {
-    res.render('compose', { user: userName(req) });
-  } else {
-    res.redirect('/login');
-  }
-
-}).post((req, res) => {
-  const post = new Post({
-    title: req.body.postTitle,
-    content: req.body.postBody,
-    userId: req.user.id
-  });
-
-  post.save((err) => {
-    if (!err) {
-      res.redirect('/secrets');
-    }
-  });
-});
-
-app.route('/posts/:postId').get((req, res) => {
-  Post.findOne({ _id: req.params.postId }, (err, post) => {
-    res.render('post', {
-      title: post.title,
-      content: post.content,
-      user: userName(req)
-
-    });
-  });
-}).put((req, res) => {
-  Post.update(
-    { _id: req.params.postId },
-    {
-      title: req.body.title,
-      content: req.body.content
-    },
-    { overwrite: true },
-    (err) => {
-      if (!err) {
-        res.send('replaced post');
-      }
-    });
-}).patch((req, res) => {
-  Post.update(
-    { _id: req.params.postId },
-    { $set: req.body },
-    (err) => {
-      if (!err) {
-        res.send('updated post');
-      } else {
-        res.send(err);
-      }
-    });
-}).delete((req, res) => {
-  Post.deleteOne(
-    { _id: req.params.postId },
-    (err) => {
-      if (!err) {
-        res.send('deleted post');
-      }
-    }
-  );
-});
-
-app.route('/register').get((req, res) => {
-  res.render('register', { user: userName(req) });
-}).post((req, res) => {
-
-  User.register({ username: req.body.username }, req.body.password, (err, user) => {
-    if (err) {
-      console.log(err);
-      res.redirect('register');
-    } else {
-      passport.authenticate('local')(req, res, () => {
-        res.redirect('secrets');
-      });
-    }
-  });
-});
-
-app.route('/secrets').get((req, res) => {
-  if (req.isAuthenticated()) {
-    Post.find({ userId: req.user.id }, (err, posts) => {
-      res.render('secrets', {
-        posts: posts,
-        user: req.user.username
-      });
-    });
-  } else {
-    res.redirect('/login');
-  }
-
-}).delete((req, res) => {
-  Post.deleteMany({}, (err) => {
-    if (!err) {
-      res.send("Successfully deleted all posts");
-    } else {
-      res.send(err);
-    }
-  });
-});
-
-// app.route('/login').get((req, res) => {
-//   res.render('login');
-// }).post((req, res) => {
-//   const user = new User({
-//     username: req.body.username,
-//     password: req.body.password
-//   });
-
-//   req.login(user, (err) => {
-//     if (err) {
-//       res.redirect('/login');
-//     } else {
-//       passport.authenticate('local')(req, res, () => {
-//         res.redirect('/secrets');
-//       });
-//     }
-//   });
-// });
+// Routes 
+app.use('/posts', postRoutes);
+app.use('/auth', authRoutes);
 
 
 
-app.get("/login", function (req, res) {
-  res.render("login", { user: userName(req) });
-});
 
-// Login Logic
-// middleware
-app.post("/login", passport.authenticate("local", {
-  successRedirect: "/secrets",
-  failureRedirect: "/login",
-  failureFlash: 'Invalid username or password.'
-}));
-
-app.get('/logout', (req, res) => {
-  req.logout();
-  res.redirect('/');
-});
 
 // Set Port
 app.set('port', (process.env.PORT || 3000));
