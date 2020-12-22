@@ -45,7 +45,6 @@ passport.deserializeUser(function (id, done) {
   });
 });
 
-const genericRoutes = require('./routes/generic');
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
 

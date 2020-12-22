@@ -1,10 +1,7 @@
-const express = require('express');
-const router = express.Router();
 const passport = require('passport');
 
+exports.userName = (req, res) => {
 
-
-const userName = (req) => {
     if (req.isAuthenticated()) {
         return req.user.username;
     } else {
