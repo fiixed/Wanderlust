@@ -82,9 +82,15 @@ app.use('/auth', authRoutes);
 
 
 // Set Port
-app.set('port', (process.env.PORT || 3000));
-app.listen(app.get('port'), function () {
-  console.log('Server started on port ' + app.get('port'));
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
+
+
+
+app.listen(port, function () {
+  console.log(`Server started on port ${port}`);
 });
 
 const userName = (req) => {
