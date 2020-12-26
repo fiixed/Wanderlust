@@ -52,7 +52,7 @@ const postRoutes = require('./routes/posts');
 passport.use(new GoogleStrategy({
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
-  callbackURL: 'http://localhost:3000/auth/google/wanderlust'
+  callbackURL: 'https://mighty-plateau-15429.herokuapp.com/auth/google/wanderlust'
 },
   function (accessToken, refreshToken, profile, email, cb) {
     console.log(email._json.email);
