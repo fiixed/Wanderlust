@@ -1,6 +1,6 @@
 # Wanderlust
 
-https://mighty-plateau-15429.herokuapp.com/
+https://wanderlust-ab.herokuapp.com
 
 Wanderlust is a web application for users who want to journal their travels.
 
