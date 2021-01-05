@@ -6,22 +6,20 @@ Wanderlust is a web application for users who want to journal their travels.
 
 ## Description
 
-The app allows users to record daily travels and thoughts, as well as save their GPS location and upload photos of their adventures.
+The app allows users to record daily travels and thoughts.
 
 
 ## Scope of functionalities
 
-Our Map page leverages multiple APIs - Google Maps, Google Geocoding, Open Brewery DB, Open Beer DB - and allows users to locate breweries in close proximity to them using geolocation, or they can search by Zip Code, City, or State. After the breweries are pinned on the map, the user is able to filter them by Micro, Regional, Brewpub, Large, Planning, Bar, Contract, or Proprietor.
-
-Our Find A Beer page allows users to search for beers by name. The results are returned from the Open Beer Database API. The results that are rendered to the screen for each beer includes detailed information such as the style of beer, the brewery of which it originated, the city & state if applicable, and the country of origin. Users are also able to filter their results by style and country. Clicking on a beer will bring the user to the Map page, where it will display the beer's brewery.
+Currently the app has both Local and Google Authentication.  User's can compose Blog posts and view all of their post history.
 
 ## Sources
 
-[Google Geocoding API](https://developers.google.com/maps/documentation/geocoding/overview), [Google Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/overview)
+
 
 ## Technologies
 
-[Bootstrap](https://getbootstrap.com/), [Axios](https://github.com/axios/axios), [JQuery](https://jquery.com/), [SweetAlert.js](https://sweetalert.js.org/)
+[Bootstrap](https://getbootstrap.com/), [Express](https://expressjs.com/), [EJS](https://ejs.co/), [MongoDB](https://www.mongodb.com/3), [Mongoose](https://mongoosejs.com/), [Passport](http://www.passportjs.org/), [Heroku](https://www.heroku.com/)
 
 ## Status
 
@@ -33,7 +31,7 @@ Website is deployed to Heroku and running stable.
 
 ## Future updates
 
-May integrate with React at a later date.  Stay Tuned!
+Will be adding image upload and Google Maps integration, as well as React front end.
 
 ## Contributing
 
